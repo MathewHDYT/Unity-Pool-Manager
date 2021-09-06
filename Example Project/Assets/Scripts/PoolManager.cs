@@ -74,7 +74,7 @@ public class PoolManager : MonoBehaviour {
     /// <param name="position">Position we want to set for the reused object.</param>
     /// <param name="rotation">Rotation we want to set for the reused object.</param>
     /// <param name="velocity">Velocity we want to set for the reused object.</param>
-    public void ReuseObject(GameObject prefab, Vector3 position, Quaternion rotation, Vector2 velocity) {
+    public void ReuseObject(GameObject prefab, Vector3 position = Vector3.zero, Quaternion rotation = Quaternion.identity, Vector2 velocity = Vector2.zero) {
         // Get InstanceID of the given GameObject.
         int poolKey = prefab.GetInstanceID();
 
