@@ -46,10 +46,10 @@ public class PoolManager : MonoBehaviour {
             }
         }
         
-        // Check if the expandablePoolDictionary doesn't already contain our expandable bool.
-        if (!expandablePoolDictionary.ContainsKey(poolkey)) {
-            // Add the InstanceID to the expandablePoolDictionary.
-            expandablePoolDictionary.Add(poolKey, dynamicPooling);
+        // Check if the dynamicPoolingDictionary doesn't already contain our expandable bool.
+        if (!dynamicPoolingDictionary.ContainsKey(poolkey)) {
+            // Add the InstanceID to the dynamicPoolingDictionary.
+            dynamicPoolingDictionary.Add(poolKey, dynamicPooling);
         }
     }
 
@@ -104,10 +104,10 @@ public class PoolManager : MonoBehaviour {
         // Get InstanceID of the given gameObject.
         int poolKey = prefab.GetInstanceID();
         
-        // Check if the expandablePoolDictionary already contains our expandable bool.
-        if (expandablePoolDictionary.ContainsKey(poolkey)) {
+        // Check if the dynamicPoolingDictionary already contains our expandable bool.
+        if (dynamicPoolingDictionary.ContainsKey(poolkey)) {
             // Adjust the value of to the expandablePoolDictionar at the given InstanceID.
-            expandablePoolDictionary[poolKey] = dynamicPooling;
+            dynamicPoolingDictionary[poolKey] = dynamicPooling;
         }
     }
 
@@ -146,9 +146,9 @@ public class PoolManager : MonoBehaviour {
         // Get InstanceID of the given gameObject.
         int poolKey = prefab.GetInstanceID();
         
-        // Check if the expandablePoolDictionary already contains our expandable bool
+        // Check if the dynamicPoolingDictionary already contains our expandable bool
         // and copy its value into bool dynamicPooling.
-        if (expandablePoolDictionary.TryGetValue(poolkey, out bool dynamicPooling)) {
+        if (dynamicPoolingDictionary.TryGetValue(poolkey, out bool dynamicPooling)) {
             if (dynamicPooling) {
                 // Increase poolSize by the needed amount of new instances.
                 IncreasePoolSize(prefab, 1);
