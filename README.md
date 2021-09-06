@@ -6,7 +6,7 @@
 [![GitHub downloads](https://img.shields.io/github/downloads/MathewHDYT/Unity-Pool-Manager-UPM/all.svg?style=flat-square)](https://github.com/MathewHDYT/Unity-Pool-Manager-UPM/releases/)
 
 # Unity Pool Manager (UPM)
-Used to easily create and manage prefabs as pools of a given size, that can be easily to save having to utilize destroy and instantiate when wanting to use an instance of that prefab.
+Used to easily create and manage instances of prefabs as pools of a given size, that saves having to utilize destroy and instantiate when wanting to use an instance of that prefab.
 
 ## Contents
 - [Unity Pool Manager (UPM)](#unity-pool-manager-upm)
@@ -23,7 +23,7 @@ Used to easily create and manage prefabs as pools of a given size, that can be e
   	- [Reuse Object method](#reuse-object-method)
 
 ## Introduction
-A lot of games need to instantiate and destroy obstacles or enemies and this small and easily integrated Pool Manager can help you seperate prefabs into pools of a given size to make sure that there are never more instances of that object then you actually need.
+A lot of games need to instantiate and destroy prefabs at runtime and this small and easily integrated Pool Manager can help you create pools of isntances from prefabs of a given size to make sure that there are never more instances of that object then you actually need in the scene.
 
 **Unity Pool Manager implements the following methods consisting of a way to:**
 - Create a pool with a given size (see [Create Pool method](#create-pool-method))
@@ -46,7 +46,7 @@ To simply use the Pool Manager in your own project without downloading the Unity
 This documentation strives to explain how to start using the Pool Manager in your project and explains how to call and how to use its publicly accesible methods correctly.
 
 ## Reference to Pool Manager Script
-To use the Pool Manager to start playing sounds outside of itself you need to reference it. As the Pool Manager is a [Singelton](https://stackoverflow.com/questions/2155688/what-is-a-singleton-in-c) this can be done easily when we get the instance and save it as a private variable in the script that uses the Pool Manager.
+To use the Pool Manager to start creating pools outside of itself you need to reference it. As the Pool Manager is a [Singelton](https://stackoverflow.com/questions/2155688/what-is-a-singleton-in-c) this can be done easily when we get the instance and save it as a private variable in the script that uses the Pool Manager.
 
 ```csharp
 private PoolManager pm;
@@ -54,7 +54,7 @@ private PoolManager pm;
 void Start() {
     pm = PoolManager.instance;
     // Calling method in PoolManager
-    pm.CreatePool(this.gameObject, 10f);
+    pm.CreatePool(this.gameObject, 10);
 }
 ```
 
@@ -62,7 +62,7 @@ Alternatively you can directly call the methods this is not advised tough, if it
 
 ```csharp
 void Start() {
-    PoolManager.CreatePool(this.gameObject, 10f);
+    PoolManager.CreatePool(this.gameObject, 10);
 }
 ```
 
@@ -124,29 +124,69 @@ Now that we have a ```gameObject```, we can simply reuse one of these ```gameObj
 - On Became Invisble (called when the object isn't rendered anymore by the camera see [OnBecameInvisible Docs](https://docs.unity3d.com/2021.2/Documentation/ScriptReference/MonoBehaviour.OnBecameInvisible.html) for more information)
 - On Became Visible (called when the object gets rendered again by the camera see [OnBecameVisible Docs](https://docs.unity3d.com/2021.2/Documentation/ScriptReference/MonoBehaviour.OnBecameVisible.html) for more information)
 
-For this you simply need to create a new class that implements the ```PoolObject``` class and then ```override``` the ```virtual``` methods (see [overriding virtual methods](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/virtual)).
+For this you simply need to create a new class that implements the ```PoolObject``` class and then ```override``` the ```virtual``` methods (see [Overriding virtual methods](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/virtual)).
 
 ## Public accesible methods
 This section explains all public accesible methods, especially what they do, how to call them and when using them might be advantageous instead of other methods. We always assume PoolManager instance has been already referenced in the script. If you haven't done that already see [Reference to Pool Manager Script](#reference-to-pool-manager-script).
 
 ### Create Pool method
 **What it does:**
+Instantiates and disables the given amount of prefabs and adds them into the poolDictionary.
 
 **How to call it:**
+- ```Prefab``` is the prefab we want to save into our pool
+- ```PoolSize``` is the amount of instances of the prefabs we want to create for our pool
+
+```csharp
+GameObject prefab = this.gameObject;
+int poolSize = 25;
+pm.CreatePool(prefab, poolSize);
+```
 
 **When to use it:**
+When you want to create a pool with a given size for a given gameObject.
 
 ### Parent Pool method
 **What it does:**
+Changes the parent of the pool with the instances of the given prefab.
 
 **How to call it:**
+- ```Prefab``` is the prefab we want to change the pool parent at
+- ```Parent``` is the new parent we want to set our pool under
+
+```csharp
+GameObject prefab = this.gameObject;
+Tranform parent = this.transform;
+pm.ParentPool(prefab, parent);
+```
 
 **When to use it:**
+When you want to change the parent of a pool to show all of the pools under the Pool Manager for example.
 
 ### Reuse Object method
 **What it does:**
+Reuses or uses one of the instances in the pool of the given prefab.
 
 **How to call it:**
+- ```Prefab``` is the prefab we want to reuse one of the instances from the pool from
+- ```Position``` is the new position the instance should have after enabling it again
+- ```Rotation``` is the new rotation the instance should have after enabling it again
+- ```Velocity``` is the new velocity the instance should have after enabling it again
+
+```csharp
+GameObject prefab = this.gameObject;
+Vector3 position = Vector3.zero;
+Quaternion rotation = Quaternion.identity;
+Vector2 velocity = Vector2.zero;
+pm.ReuseObject(prefab, position, rotation, velocity);
+```
+
+Alternatively you can call the methods with less paramters as some of them have default arguments.
+
+```csharp
+GameObject prefab = this.gameObject;
+pm.ReuseObject(prefab);
+```
 
 **When to use it:**
-
+When you want to use one of the instances in the pool of the given prefabs to spawn them in a new location with a given velocity and rotation.
