@@ -136,6 +136,16 @@ Instantiates and disables the given amount of prefabs and adds them into the poo
 **How to call it:**
 - ```Prefab``` is the prefab we want to save into our pool
 - ```PoolSize``` is the amount of instances of the prefabs we want to create for our pool
+- ```DynamicPooling ``` defines if the poolSize should increase dynamically, if there are only visible instances of the given prefab to use
+
+```csharp
+GameObject prefab = this.gameObject;
+int poolSize = 25;
+bool dynamicPooling = false;
+pm.CreatePool(prefab, poolSize, dynamicPooling);
+```
+
+Alternatively you can call the methods with less paramters as some of them have default arguments.
 
 ```csharp
 GameObject prefab = this.gameObject;
@@ -162,6 +172,47 @@ pm.ParentPool(prefab, parent);
 
 **When to use it:**
 When you want to change the parent of a pool to show all of the pools under the Pool Manager for example.
+
+### Increase Pool Size method
+**What it does:**
+Instantiates and disables the given amount of prefabs and adds them into the poolDictionary into the already existing pool.
+
+**How to call it:**
+- ```Prefab``` is the prefab we want to save into our pool
+- ```Difference``` is the additional amount of instances of the prefab we want to save into our pool
+
+```csharp
+GameObject prefab = this.gameObject;
+int difference = 1;
+pm.IncreasePoolSize(prefab, difference);
+```
+
+**When to use it:**
+When you want to increase the size of an already existing pool at runtime, because the space is running out and causing popping.
+
+### Enable Dynamic Pooling method
+**What it does:**
+En -or disables dynamic pooling on the pool with the instances of the given prefab.
+
+**How to call it:**
+- ```Prefab``` is the prefab we want to en -or disable dynamic pooling on the pool off.
+- ```DynamicPooling ``` defines if the poolSize should increase dynamically, if there are only visible instances of the given prefab to use
+
+```csharp
+GameObject prefab = this.gameObject;
+bool dynamicPooling = true;
+pm.EnableDynamicPooling(prefab, dynamicPooling);
+```
+
+Alternatively you can call the methods with less paramters as some of them have default arguments.
+
+```csharp
+GameObject prefab = this.gameObject;
+pm.EnableDynamicPooling(prefab);
+```
+
+**When to use it:**
+When you want to en -or disable dynamic pooling on a given pool, because it is not needed anymore or becomes needed after a certain switch in gameplay.
 
 ### Reuse Object method
 **What it does:**
