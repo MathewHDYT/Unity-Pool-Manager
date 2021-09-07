@@ -140,7 +140,7 @@ Instantiates and disables the given amount of prefabs and adds them into the poo
 **How to call it:**
 - ```Prefab``` is the prefab we want to save into our pool
 - ```PoolSize``` is the amount of instances of the prefabs we want to create for our pool
-- ```DynamicPooling ``` defines if the poolSize should increase dynamically, if there are only visible instances of the given prefab to use
+- ```DynamicPooling``` defines if the poolSize should increase dynamically, if there are only visible instances of the given prefab to use
 
 ```csharp
 GameObject prefab = this.gameObject;
@@ -200,7 +200,7 @@ En -or disables dynamic pooling on the pool with the instances of the given pref
 
 **How to call it:**
 - ```Prefab``` is the prefab we want to en -or disable dynamic pooling on the pool off.
-- ```DynamicPooling ``` defines if the poolSize should increase dynamically, if there are only visible instances of the given prefab to use
+- ```DynamicPooling``` defines if the poolSize should increase dynamically, if there are only visible instances of the given prefab to use
 
 ```csharp
 GameObject prefab = this.gameObject;
