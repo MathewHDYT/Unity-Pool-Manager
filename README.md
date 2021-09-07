@@ -20,6 +20,8 @@ Used to easily create and manage instances of prefabs as pools of a given size, 
   - [Public accesible methods](#public-accesible-methods)
   	- [Create Pool method](#create-pool-method)
   	- [Parent Pool method](#parent-pool-method)
+  	- [Increase Pool Size method](#increase-pool-size-method)
+  	- [Enable Dynamic Pooling method](#enable-dynamic-pooling-method)
   	- [Reuse Object method](#reuse-object-method)
 
 ## Introduction
@@ -28,6 +30,8 @@ A lot of games need to instantiate and destroy prefabs at runtime and this small
 **Unity Pool Manager implements the following methods consisting of a way to:**
 - Create a pool with a given size (see [Create Pool method](#create-pool-method))
 - Parent a pool to a given gameObject (see [Parent Pool method](#parent-pool-method))
+- Increase the pool size at runtime (see [Increase Pool Size method](#increase-pool-size-method))
+- En -or disable dynamic pooling, to create new slots in the pool once there are only visible instances to reuse (see [Enable Dynamic Pooling method](#enable-dynamic-pooling-method))
 - Reuse an Pool Object from the given pool (see [Reuse Object method](#reuse-object-method))
 
 For each method there is a description on how to call it and how to use it correctly for your game in the given section.
