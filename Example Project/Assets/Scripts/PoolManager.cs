@@ -25,7 +25,7 @@ public class PoolManager : MonoBehaviour {
 
     
     /// <summary>
-    /// Instantiates and disables the given amount of Prefabs and adds them into the poolDictionary.
+    /// Instantiates and disables the given amount of prefabs and adds them into the poolDictionary.
     /// </summary>
     /// <param name="prefab">Prefab we want to save into our pool.</param>
     /// <param name="poolSize">Amount of instances of the prefab we want to save into our pool.</param>
@@ -77,10 +77,10 @@ public class PoolManager : MonoBehaviour {
     }
     
     /// <summary>
-    /// Instantiates and disables the given amount of Prefabs and adds them into the poolDictionary into the already existing pool.
+    /// Instantiates and disables the given amount of prefabs and adds them into the poolDictionary into the already existing pool.
     /// </summary>
     /// <param name="prefab">Prefab we want to save into our pool.</param>
-    /// <param name="poolSize">Additional amount of instances of the prefab we want to save into our pool.</param>
+    /// <param name="difference">Additional amount of instances of the prefab we want to save into our pool.</param>
     public void IncreasePoolSize(GameObject prefab, int difference) {
         // Get InstanceID of the given gameObject.
         int poolKey = prefab.GetInstanceID();
