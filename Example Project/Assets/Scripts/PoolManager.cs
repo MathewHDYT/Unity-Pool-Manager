@@ -20,7 +20,7 @@ public class PoolManager : MonoBehaviour {
     }
     #endregion
 
-    private Dictionary<int, (bool DynamicPooling, Queue<bool> ObjectQueue)> poolDictionary = new Dictionary<int, (bool, Queue<bool>)>();
+    private Dictionary<int, Pool> poolDictionary = new Dictionary<int, Pool>();
     
     /// <summary>
     /// Instantiates and disables the given amount of prefabs and adds them into the poolDictionary.
@@ -35,12 +35,12 @@ public class PoolManager : MonoBehaviour {
         // Check if the poolDictionary doesn't already contain our prefab pool.
         if (!poolDictionary.ContainsKey(poolKey)) {
             // Add the InstanceID to the poolDictionary.
-            poolDictionary.Add(poolKey, (dynamicPooling, new Queue<ObjectInstance>()));
+            poolDictionary.Add(poolKey, new Pool(dynamicPooling, new Queue<ObjectInstance>()));
 
             // Enqueue disabled gameObjects into the Queue equal to the poolSize.
-            for (; poolSize > 0; --i) {
+            for (; poolSize > 0; --poolSize) {
                 ObjectInstance newObject = new ObjectInstance(Instantiate(prefab) as GameObject);
-                poolDictionary.GetValueOrDefault(poolKey).ObjectQueue.Enqueue(newObject);
+                poolDictionary[poolKey].ObjectQueue.Enqueue(newObject);
             }
         }
     }
@@ -59,9 +59,9 @@ public class PoolManager : MonoBehaviour {
         poolHolder.transform.SetParent(parent);
 
         // Try to get the ObjectInstance queue from the given poolKey.
-        if (poolDictionary.TryGetValue(poolKey, out (bool DynamicPooling, Queue<bool> ObjectQueue) values)) {
+        if (poolDictionary.TryGetValue(poolKey, out Pool pool)) {
             // Loop through each objectInstance in the objectQueue.
-            foreach (var objectInstance in values.ObjectQueue) {
+            foreach (var objectInstance in pool.ObjectQueue) {
                 // Set its parent equal to the newly created poolHolder.
                 objectInstance.Transform.SetParent(poolHolder.transform);
             }
@@ -80,9 +80,13 @@ public class PoolManager : MonoBehaviour {
         // Check if the poolDictionary already contains our prefab pool.
         if (poolDictionary.ContainsKey(poolKey)) {
             // Enqueue disabled gameObjects into the Queue equal to the poolSize.
-            for (; difference > 0; --i) {
+            for (; difference > 0; --difference) {
                 ObjectInstance newObject = new ObjectInstance(Instantiate(prefab) as GameObject);
-                poolDictionary.GetValueOrDefault(poolKey).ObjectQueue.Enqueue(newObject);
+                poolDictionary[poolKey].ObjectQueue.Enqueue(newObject);
+
+                // Get the parent we parented the rest of the pool too and parent the new instance to that as well.
+                Transform currentParent = poolDictionary[poolKey].ObjectQueue.FirstOrDefault().Transform.parent;
+                newObject.Transform.SetParent(currentParent);
             }
         }
     }
@@ -99,7 +103,7 @@ public class PoolManager : MonoBehaviour {
         // Check if the poolDictionary already contains our prefab pool.
         if (poolDictionary.ContainsKey(poolKey)) {
             // Adjust the value of to the expandablePoolDictionar at the given InstanceID.
-            poolDictionary.GetValueOrDefault(poolKey).DynamicPooling = dynamicPooling;
+            poolDictionary[poolKey].DynamicPooling = dynamicPooling;
         }
     }
 
@@ -110,19 +114,19 @@ public class PoolManager : MonoBehaviour {
     /// <param name="position">Position we want to set for the reused object.</param>
     /// <param name="rotation">Rotation we want to set for the reused object.</param>
     /// <param name="velocity">Velocity we want to set for the reused object.</param>
-    public void ReuseObject(GameObject prefab, Vector3 position = Vector3.zero, Quaternion rotation = Quaternion.identity, Vector2 velocity = Vector2.zero) {
+    public void ReuseObject(GameObject prefab, Vector3 position, Quaternion rotation, Vector2 velocity) {
         // Get InstanceID of the given gameObject.
         int poolKey = prefab.GetInstanceID();
 
         // Check if the poolDictionary already contains our Prefab.
         if (poolDictionary.ContainsKey(poolKey)) {
             // First we try to reuse objects that are invisble.
-            var objectToReuse = poolDictionary.GetValueOrDefault(poolKey).ObjectQueue.Where(x => !x).FirstOrDefault();
+            var objectToReuse = poolDictionary[poolKey].ObjectQueue.Where(x => !x.IsVisible()).FirstOrDefault();
             
             if (objectToReuse == null) {
-                objectToReuse = UseDynamicPooledObject(poolKey);
+                objectToReuse = UseDynamicPooledObject(prefab);
             }
-            poolDictionary.GetValueOrDefault(poolKey).ObjectQueue.Enqueue(objectToReuse);
+            poolDictionary[poolKey].ObjectQueue.Enqueue(objectToReuse);
             objectToReuse.Reuse(position, rotation, velocity);
         }
     }
@@ -133,80 +137,29 @@ public class PoolManager : MonoBehaviour {
     /// <param name="prefab">Prefab we want to reuse.</param>
     /// <param name="prefab">Prefab we want to reuse.</param>
     /// <returns>Newly created instance in our pool of the given prefab or our last used instance in case dymaicPooling is disabled.</returns>
-    private GameObject UseDynamicPooledObject(GameObject prefab) {
-        GameObject dynamicObject = null;
+    private ObjectInstance UseDynamicPooledObject(GameObject prefab) {
+        ObjectInstance dynamicObject = null;
         
         // Get InstanceID of the given gameObject.
         int poolKey = prefab.GetInstanceID();
         
         // Check if the poolDictionary already contains our expandable bool
         // and copy its value into bool dynamicPooling.
-        if (poolDictionary.TryGetValue(poolKey, out (bool DynamicPooling, Queue<bool> ObjectQueue) values)) {
-            if (values.DynamicPooling) {
+        if (poolDictionary.TryGetValue(poolKey, out Pool pool)) {
+            if (pool.DynamicPooling) {
                 // Increase poolSize by the needed amount of new instances.
                 IncreasePoolSize(prefab, 1);
                 // Return the newly create instance.
-                dynamicObject = poolDictionary.GetValueOrDefault(poolKey).ObjectQueue.Where(x => !x).FirstOrDefault();
+                dynamicObject = poolDictionary[poolKey].ObjectQueue.Where(x => !x.IsVisible()).FirstOrDefault();
             }
         }
         
         // Check if we got a newly instantiated object from our prefab pool.
         if (dynamicObject == null) {
             // If not return the last used instance from the prefab pool
-            dynamicObject = poolDictionary.GetValueOrDefault(poolKey).ObjectQueue.Dequeue();
-        }
-        
-        return dynamicObject
-    }
-
-    /// <summary>
-    /// Handles components needed for managing of the pooled gameobjects.
-    /// </summary>
-    public class ObjectInstance {
-        private readonly GameObject _gameObject;
-        private readonly bool _hasPoolObjectComponent;
-        private readonly PoolObject _poolObjectScript;
-
-        private Transform _transform;
-
-        public GameObject GameObject {
-            get { return _gameObject; }
+            dynamicObject = poolDictionary[poolKey].ObjectQueue.Dequeue();
         }
 
-        public Transform Transform {
-            get { return _transform; }
-            set { _transform = value; }
-        }
-
-        public ObjectInstance(GameObject objectInstance) {
-            _gameObject = objectInstance;
-            _transform = _gameObject.transform;
-            _gameObject.SetActive(false);
-
-            // Get the PoolObject Script from the given objectInstance.
-            var script = _gameObject.GetComponent<PoolObject>();
-            if (script != null) {
-                _hasPoolObjectComponent = true;
-                _poolObjectScript = script;
-            }
-        }
-
-        public void Reuse(Vector3 position, Quaternion rotation, Vector2 velocity) {
-            _gameObject.SetActive(true);
-            _transform.position = position;
-            _transform.rotation = rotation;
-
-            if (_hasPoolObjectComponent) {
-                _poolObjectScript.SetVelocity(velocity);
-                _poolObjectScript.OnObjectReuse();
-            }
-        }
-
-        public bool IsVisible() {
-            if (_hasPoolObjectComponent) {
-                return _poolObjectScript.IsVisible;
-            }
-            return true;
-        }
+        return dynamicObject;
     }
 }

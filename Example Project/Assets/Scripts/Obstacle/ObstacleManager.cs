@@ -11,13 +11,15 @@ public class ObstacleManager : MonoBehaviour {
 
     private int weightTotal = 1;
     private PoolManager pm;
+    private bool dynamicPooling;
 
     private void Start() {
         pm = PoolManager.instance;
         // Create a pool and its parent for each weightedObject.
         foreach (var spawnPrefab in weightedObjects) {
-            pm.CreatePool(spawnPrefab.gameObject, spawnPrefab.spawnAmount);
-            pm.ParentPool(spawnPrefab.gameObject, this.transform);
+            dynamicPooling = !spawnPrefab.dynamicPooling;
+            pm.CreatePool(spawnPrefab.gameObject, spawnPrefab.spawnAmount, spawnPrefab.dynamicPooling);
+            //pm.ParentPool(spawnPrefab.gameObject, this.transform);
             weightTotal += spawnPrefab.weight;
         }
         // Order weightedObjects by their assigned weight.
@@ -31,6 +33,12 @@ public class ObstacleManager : MonoBehaviour {
             Vector3 spawnPos = GetRandomPosition();
             pm.ReuseObject(randomSpawnPrefab, spawnPos, Quaternion.identity, Vector2.zero);
         }
+    }
+
+    public void EnableDynamicPooling() {
+        GameObject randomSpawnPrefab = GetRandomSpawnPrefab();
+        pm.EnableDynamicPooling(randomSpawnPrefab, dynamicPooling);
+        dynamicPooling = !dynamicPooling;
     }
 
     private GameObject GetRandomSpawnPrefab() {

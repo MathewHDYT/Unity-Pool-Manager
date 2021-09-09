@@ -6,4 +6,5 @@ public class WeightedObject { // Creating WeightedObject Class with variables
     [Range(0f, 100f)]
     public int weight;
     public int spawnAmount;
+    public bool dynamicPooling;
 }
