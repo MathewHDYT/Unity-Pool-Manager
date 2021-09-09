@@ -20,9 +20,7 @@ public class PoolManager : MonoBehaviour {
     }
     #endregion
 
-    private Dictionary<int, Queue<ObjectInstance>> poolDictionary = new Dictionary<int, Queue<ObjectInstance>>();
-    private Dictionary<int, bool> dynamicPoolingDictionary = new Dictionary<int, bool>();
-
+    private Dictionary<int, (bool DynamicPooling, Queue<bool> ObjectQueue)> poolDictionary = new Dictionary<int, (bool, Queue<bool>)>();
     
     /// <summary>
     /// Instantiates and disables the given amount of prefabs and adds them into the poolDictionary.
@@ -37,19 +35,13 @@ public class PoolManager : MonoBehaviour {
         // Check if the poolDictionary doesn't already contain our prefab pool.
         if (!poolDictionary.ContainsKey(poolKey)) {
             // Add the InstanceID to the poolDictionary.
-            poolDictionary.Add(poolKey, new Queue<ObjectInstance>());
+            poolDictionary.Add(poolKey, (dynamicPooling, new Queue<ObjectInstance>()));
 
             // Enqueue disabled gameObjects into the Queue equal to the poolSize.
             for (; poolSize > 0; --i) {
                 ObjectInstance newObject = new ObjectInstance(Instantiate(prefab) as GameObject);
-                poolDictionary[poolKey].Enqueue(newObject);
+                poolDictionary.GetValueOrDefault(poolKey).ObjectQueue.Enqueue(newObject);
             }
-        }
-        
-        // Check if the dynamicPoolingDictionary doesn't already contain our expandable bool.
-        if (!dynamicPoolingDictionary.ContainsKey(poolkey)) {
-            // Add the InstanceID to the dynamicPoolingDictionary.
-            dynamicPoolingDictionary.Add(poolKey, dynamicPooling);
         }
     }
 
@@ -67,9 +59,9 @@ public class PoolManager : MonoBehaviour {
         poolHolder.transform.SetParent(parent);
 
         // Try to get the ObjectInstance queue from the given poolKey.
-        if (poolDictionary.TryGetValue(poolKey, out Queue<ObjectInstance> objectQueue)) {
+        if (poolDictionary.TryGetValue(poolKey, out (bool DynamicPooling, Queue<bool> ObjectQueue) values)) {
             // Loop through each objectInstance in the objectQueue.
-            foreach (var objectInstance in objectQueue) {
+            foreach (var objectInstance in values.ObjectQueue) {
                 // Set its parent equal to the newly created poolHolder.
                 objectInstance.Transform.SetParent(poolHolder.transform);
             }
@@ -90,7 +82,7 @@ public class PoolManager : MonoBehaviour {
             // Enqueue disabled gameObjects into the Queue equal to the poolSize.
             for (; difference > 0; --i) {
                 ObjectInstance newObject = new ObjectInstance(Instantiate(prefab) as GameObject);
-                poolDictionary[poolKey].Enqueue(newObject);
+                poolDictionary.GetValueOrDefault(poolKey).ObjectQueue.Enqueue(newObject);
             }
         }
     }
@@ -103,11 +95,11 @@ public class PoolManager : MonoBehaviour {
     public void EnableDynamicPooling(GameObject prefab, bool dynamicPooling = true) {
         // Get InstanceID of the given gameObject.
         int poolKey = prefab.GetInstanceID();
-        
-        // Check if the dynamicPoolingDictionary already contains our expandable bool.
-        if (dynamicPoolingDictionary.ContainsKey(poolkey)) {
+
+        // Check if the poolDictionary already contains our prefab pool.
+        if (poolDictionary.ContainsKey(poolKey)) {
             // Adjust the value of to the expandablePoolDictionar at the given InstanceID.
-            dynamicPoolingDictionary[poolKey] = dynamicPooling;
+            poolDictionary.GetValueOrDefault(poolKey).DynamicPooling = dynamicPooling;
         }
     }
 
@@ -125,11 +117,12 @@ public class PoolManager : MonoBehaviour {
         // Check if the poolDictionary already contains our Prefab.
         if (poolDictionary.ContainsKey(poolKey)) {
             // First we try to reuse objects that are invisble.
-            var objectToReuse = poolDictionary[poolKey].Where(x => !x.IsVisible()).FirstOrDefault();
+            var objectToReuse = poolDictionary.GetValueOrDefault(poolKey).ObjectQueue.Where(x => !x).FirstOrDefault();
+            
             if (objectToReuse == null) {
                 objectToReuse = UseDynamicPooledObject(poolKey);
             }
-            poolDictionary[poolKey].Enqueue(objectToReuse);
+            poolDictionary.GetValueOrDefault(poolKey).ObjectQueue.Enqueue(objectToReuse);
             objectToReuse.Reuse(position, rotation, velocity);
         }
     }
@@ -146,28 +139,25 @@ public class PoolManager : MonoBehaviour {
         // Get InstanceID of the given gameObject.
         int poolKey = prefab.GetInstanceID();
         
-        // Check if the dynamicPoolingDictionary already contains our expandable bool
+        // Check if the poolDictionary already contains our expandable bool
         // and copy its value into bool dynamicPooling.
-        if (dynamicPoolingDictionary.TryGetValue(poolkey, out bool dynamicPooling)) {
-            if (dynamicPooling) {
+        if (poolDictionary.TryGetValue(poolKey, out (bool DynamicPooling, Queue<bool> ObjectQueue) values)) {
+            if (values.DynamicPooling) {
                 // Increase poolSize by the needed amount of new instances.
                 IncreasePoolSize(prefab, 1);
                 // Return the newly create instance.
-                dynamicObject = poolDictionary[poolKey].Where(x => !x.IsVisible()).FirstOrDefault();
+                dynamicObject = poolDictionary.GetValueOrDefault(poolKey).ObjectQueue.Where(x => !x).FirstOrDefault();
             }
         }
         
         // Check if we got a newly instantiated object from our prefab pool.
         if (dynamicObject == null) {
-            // If not return the last used instance from the prefab pool.
-            dynamicObject = poolDictionary[poolKey].Dequeue();
+            // If not return the last used instance from the prefab pool
+            dynamicObject = poolDictionary.GetValueOrDefault(poolKey).ObjectQueue.Dequeue();
         }
         
         return dynamicObject
     }
-    
-                // If there are none we just use the first one from our queue.
-                objectToReuse = poolDictionary[poolKey].Dequeue();
 
     /// <summary>
     /// Handles components needed for managing of the pooled gameobjects.
